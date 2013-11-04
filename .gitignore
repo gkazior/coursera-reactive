@@ -1,0 +1,16 @@
+*/target
+*/*/target
+*/*/*/target
+*/.worksheet
+*/*/.worksheet
+build
+materials
+lectures
+.gradle
+release.properties
+~*.tmp
+*.jar
+*.class
+*/.cache
+tmp
+
