@@ -4,8 +4,7 @@
 */.worksheet
 */*/.worksheet
 build
-materials
-lectures
+resources
 .gradle
 release.properties
 ~*.tmp

@@ -1,5 +1,5 @@
 <projectDescription>
-  <name>progfun-quickcheck</name>
+  <name>01_progfun-quickcheck</name>
   <buildSpec>
     <buildCommand>
       <name>org.scala-ide.sdt.core.scalabuilder</name>
