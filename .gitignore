@@ -5,6 +5,7 @@
 */*/.worksheet
 build
 resources
+my
 .gradle
 release.properties
 ~*.tmp
