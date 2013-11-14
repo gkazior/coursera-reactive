@@ -1,4 +1,4 @@
-name <<= submitProjectName(pname => "progfun-"+ pname)
+name <<= submitProjectName(pname => "02_progfun-"+ pname)
 
 version := "1.0.0"
 

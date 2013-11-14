@@ -1,5 +1,5 @@
 <projectDescription>
-  <name>progfun-simulations</name>
+  <name>02_progfun-simulations</name>
   <buildSpec>
     <buildCommand>
       <name>org.scala-ide.sdt.core.scalabuilder</name>
