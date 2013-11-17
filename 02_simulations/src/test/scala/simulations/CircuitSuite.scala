@@ -24,7 +24,7 @@ class CircuitSuite extends CircuitSimulator with FunSuite {
       in1.setSignal(i1)
       in2.setSignal(i2)
       run
-      assert(out.getSignal === o, "truth table for |" + i1 + "|" + i2 + "| -> " + o)
+      assert(out.getSignal === o, s"truth table for |$i1|$i2| -> $o")
     }
 
     for {
@@ -48,12 +48,13 @@ class CircuitSuite extends CircuitSimulator with FunSuite {
     testGate(_ || _, orGate)
   }
 
+  // It should be very easy to write a generator and test demux of random size witj generator and ScalaCheck
   test("demux example") {
     def assertAllFalseButOne(wires: Seq[Wire], butTrueLine: Int, comment: String) {
       val outputs = wires map (_.getSignal) toArray
 
       for { i <- 0 to outputs.size - 1 } ({
-        assert(outputs(i) === (butTrueLine == i), comment + " " + i + " is not false")
+        assert(outputs(i) === (butTrueLine == i), s"$comment. Error on: $i ")
       })
     }
     
@@ -75,7 +76,7 @@ class CircuitSuite extends CircuitSimulator with FunSuite {
       c(1).setSignal(add2)
       c(2).setSignal(add3)
       run
-      assertAllFalseButOne(out, -1, "In false")
+      assertAllFalseButOne(out, -1, "All lines false when in false")
     })
 
     // When in is true then all lines false except only one with the given address
@@ -90,7 +91,7 @@ class CircuitSuite extends CircuitSimulator with FunSuite {
       c(2).setSignal(add3)
       run
       val trueLine: Int = (if (add1) 1 else 0) + (if (add2) 2 else 0) + (if (add3) 4 else 0)
-      assertAllFalseButOne(out, trueLine, "In false")
+      assertAllFalseButOne(out, trueLine, s"Line $trueLine should be true and no other")
     })
 
   }

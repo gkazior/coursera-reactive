@@ -107,6 +107,7 @@ abstract class CircuitSimulator extends Simulator {
     }
   }
 
+  // Well, my implementation should be recursive and base on halfAdder however I forgot to watch instruction and remember a bit how demux works 
   def demux(in: Wire, c: List[Wire], out: List[Wire]) {
     val addCnt = c.size // Count of address lines
     val negativeWires = Array.fill(addCnt) { new Wire }
@@ -129,7 +130,6 @@ abstract class CircuitSimulator extends Simulator {
       })
     }
   }
-
 }
 
 object Circuit extends CircuitSimulator {
@@ -193,23 +193,15 @@ object Circuit extends CircuitSimulator {
     in.setSignal(true)
     c(0).setSignal(false)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     c(0).setSignal(true)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     in.setSignal(false)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     c(0).setSignal(true)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
   }
 
   def andListExample(inputNo: Int) {
@@ -217,8 +209,9 @@ object Circuit extends CircuitSimulator {
     val out = new Wire
 
     // Set probes
-    in.zipWithIndex.map((pair) => probe("in[" + pair._2 + "]", pair._1))
+    for (i <- 0 until in.size - 1) {probe(s"in[$i]", in(i))} 
 
+    // set inputs to false
     in map (_.setSignal(false))
 
     probe("out", out)
@@ -240,36 +233,24 @@ object Circuit extends CircuitSimulator {
     val out = Array(new Wire, new Wire, new Wire, new Wire)
     demux(in, c.toList, out.toList)
     probe("in1", in)
-    probe("c[0]", c(0))
-    probe("c[1]", c(1))
-
-    probe("out[0]", out(0))
-    probe("out[1]", out(1))
-    probe("out[2]", out(2))
-    probe("out[3]", out(3))
+    for (i <- 0 until c.size - 1)   {(probe(s"c[$i]"  , c(i))) }
+    for (i <- 0 until out.size - 1) {(probe(s"out[$i]", out(i))) }
 
     in.setSignal(true)
     c(0).setSignal(false)
     c(1).setSignal(false)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     c(0).setSignal(true)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     c(1).setSignal(true)
     run
-    printWires("out:", out.toList)
-    printWires("c:  ", c.toList)
 
     c(0).setSignal(false)
     run
     printWires("out:", out.toList)
     printWires("c:  ", c.toList)
-
   }
 
 }

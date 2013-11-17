@@ -4,7 +4,7 @@ object SimulatorWs {
   val a = Array(1, 2, 3, 4, 5, 6)                 //> a  : Array[Int] = Array(1, 2, 3, 4, 5, 6)
 
   for (i <- 1 until 5) {
-  	print(i + " ")                            //> 1 2 3 4 
+    print(i + " ")                                //> 1 2 3 4 
   }
 
   (1 until 5) foreach ((i: Int) => print(s"$i ")) //> 1 2 3 4 
@@ -22,14 +22,12 @@ object SimulatorWs {
     }
   }
 
-  //val rolek = 1 >> 1
-  //4 & 1
-  //Array.range(2, 4)
+  
   //Circuit.andGateExample
 
   //Circuit.orGateExample
 
-  val res = List("a", "b", "c").zipWithIndex.map(x => x._1.toString + "[" + x._2 + "]")
+  val res = List("a", "b", "c").zipWithIndex.map(x => s"${x._1}[${x._2}]")
                                                   //> res  : List[String] = List(a[0], b[1], c[2])
   //val res2 = List("a", "b", "c").zipWithIndex.map((_._1.toString + "[" + _._2 + "]" ))
 
@@ -41,6 +39,6 @@ object SimulatorWs {
   Circuit.getAndWires(new Wire, 4, pos, neg, Nil) //> res0: List[simulations.Wire] = List(false, Neg, Neg, Pos)
 
   // Circuit.demux1Example
-  //Circuit.demuxExample
+  // Circuit.demuxExample
   // Circuit.andListExample(10)
 }
