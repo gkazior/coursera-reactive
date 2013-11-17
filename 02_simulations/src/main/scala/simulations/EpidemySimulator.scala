@@ -16,7 +16,7 @@ class EpidemySimulator extends Simulator {
 
   import SimConfig._
 
-  val persons: List[Person] = List() // to complete: construct list of persons
+  val persons: List[Person] = List.range(1, SimConfig.population) map (new Person(_)) // to complete: construct list of persons
 
   class Person (val id: Int) {
     var infected = false
