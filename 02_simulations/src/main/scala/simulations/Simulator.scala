@@ -24,12 +24,15 @@ class Simulator {
       case WorkItem(time, action) :: rest =>
         agenda = rest
         currentTime = time
+        reportStats
         action()
-    }
+    }    
   }
 
   def run {
     println("*** New propagation ***")
     while (!agenda.isEmpty) { next }
   }
+  def reportStats: Unit = {}
+  def getCurrentTime: Int = currentTime
 }

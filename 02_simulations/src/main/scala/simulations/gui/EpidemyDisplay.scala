@@ -1,26 +1,29 @@
 package simulations
 package gui
 
-import javax.swing.{JComponent, JFrame, JLabel, Timer, SwingUtilities}
-import javax.swing.border.{EmptyBorder}
-import java.awt.{Graphics, Graphics2D, GridLayout, BorderLayout, Color, Dimension, Rectangle, Polygon}
-import java.awt.event.{ActionListener, ActionEvent}
+import javax.swing.{ JComponent, JFrame, JLabel, Timer, SwingUtilities }
+import javax.swing.border.{ EmptyBorder }
+import java.awt.{ Graphics, Graphics2D, GridLayout, BorderLayout, Color, Dimension, Rectangle, Polygon }
+import java.awt.event.{ ActionListener, ActionEvent }
 
 object EpidemyDisplay extends EpidemySimulator with App {
 
-  class Situation(var healthy: Int, var sick: Int, var immune: Int) {
-    def reset { healthy = 0; sick = 0; immune = 0 }
+  class Situation(var healthy: Int, var sick: Int, var immune: Int, var infected: Int, var dead: Int) {
+    def reset { healthy = 0; sick = 0; immune = 0; infected = 0; dead = 0 }
     def count(p: Person) {
       if (p.immune) immune += 1
       else if (p.sick) sick += 1
+      else if (p.dead) dead += 1
+      else if (p.infected) infected += 1
       else healthy += 1
+
     }
-    override def toString() = "Situation(" + healthy + ", " + sick + ", " + immune + ")"
+    override def toString() = "Situation(" + healthy + ", " + sick + ", " + immune + ", " + infected + ")"
   }
 
   val world: Grid[Situation] = new Grid[Situation](SimConfig.roomRows, SimConfig.roomColumns)
   for (row <- 0 to world.height - 1; col <- 0 to world.width - 1)
-    world.update(row, col, new Situation(0, 0, 0))
+    world.update(row, col, new Situation(0, 0, 0, 0, 0))
   var history: List[Situation] = Nil
   var historyContinues = true
 
@@ -34,11 +37,13 @@ object EpidemyDisplay extends EpidemySimulator with App {
     for (p <- persons) {
       historyContinues = historyContinues || p.infected
     }
-    val ns = new Situation(0, 0, 0)
+    val ns = new Situation(0, 0, 0, 0, 0)
     for (s <- world) {
       ns.healthy += s.healthy
       ns.sick += s.sick
       ns.immune += s.immune
+      ns.infected += s.infected
+      ns.dead += s.dead
     }
     history = ns :: history
   }
@@ -61,7 +66,7 @@ object EpidemyDisplay extends EpidemySimulator with App {
 
   import GraphicConfig._
 
-  class Room (val worldRow: Int, val worldCol: Int) extends JComponent {
+  class Room(val worldRow: Int, val worldCol: Int) extends JComponent {
     val roomDimension = new Dimension(roomSize + 1, roomSize + 1)
     setPreferredSize(roomDimension)
     var situation: Situation = null
@@ -102,8 +107,7 @@ object EpidemyDisplay extends EpidemySimulator with App {
         if (history.isEmpty) {
           graph.setColor(Color.DARK_GRAY)
           graph.fill(new Rectangle(getWidth, graphHeight))
-        }
-        else {
+        } else {
           val steps: Double = history.length - 1
           val advanceStep: Double = (((getWidth - 3).toDouble) / (steps + 1)).toDouble
           def proportion(count: Int): Int =
@@ -137,7 +141,7 @@ object EpidemyDisplay extends EpidemySimulator with App {
           graph.fillPolygon(sickPoly)
         }
         graph.setColor(Color.WHITE)
-        graph.drawRect(0, 0, getWidth -1, graphHeight - 1)
+        graph.drawRect(0, 0, getWidth - 1, graphHeight - 1)
       }
     }
     object roomDisplay extends JComponent {
@@ -159,7 +163,7 @@ object EpidemyDisplay extends EpidemySimulator with App {
       var countTime = 0
       def actionPerformed(event: ActionEvent) {
         if (currentTime <= countTime) {
-          assert(hasStep)
+          // assert(hasStep) // well I do not generate step when all are dead 
           for (w <- world) w.reset
           updateWorld()
           if (historyContinues) updateHistory()
@@ -171,12 +175,14 @@ object EpidemyDisplay extends EpidemySimulator with App {
           history = history.head :: history
         }
         if (!history.isEmpty) setText("On day " + countTime + ", " +
-                                      history.head.healthy + " healthy, " +
-                                      history.head.sick + " sick/dead, " +
-                                      history.head.immune + " immune.")
+          history.head.healthy + " healthy, " +
+          history.head.infected + " infected, " +
+          history.head.sick + " sick, " +
+          history.head.dead + " dead, " +
+          history.head.immune + " immune.")
         populationGraph.repaint()
-      	countTime += 1
-        if (countTime == 150) println("Dead people on day 150: "+persons.count(p => p.dead))
+        countTime += 1
+        if (countTime == 150) println("Dead people on day 150: " + persons.count(p => p.dead))
       }
     }
     setContentPane(new JComponent {

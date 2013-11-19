@@ -96,37 +96,39 @@ abstract class CircuitSimulator extends Simulator {
     helperAnd(a.head, a.tail, output)
   }
 
-  def getAndWires(first: Wire, address: Int, pos: List[Wire], neg: List[Wire], acc: List[Wire]): List[Wire] = {
+  def getAndWires(first: Wire, carryLineNo: Int, pos: List[Wire], neg: List[Wire], acc: List[Wire]): List[Wire] = {
     pos match {
-      case Nil => first :: acc.reverse
+      case Nil => first :: acc
       case head :: tail => {
-        val myAddress = address & 1
-        val myWire = if (myAddress == 1) head else neg.head
-        getAndWires(first, address >> 1, pos.tail, neg.tail, myWire :: acc)
+        // Connect carry lines to right signals
+        val myCarryLineNo = carryLineNo & 1
+        val myWire = if (myCarryLineNo == 1) head else neg.head
+        getAndWires(first, carryLineNo >> 1, pos.tail, neg.tail, myWire :: acc)
       }
     }
   }
 
   // Well, my implementation should be recursive and base on halfAdder however I forgot to watch instruction and remember a bit how demux works 
   def demux(in: Wire, c: List[Wire], out: List[Wire]) {
-    val addCnt = c.size // Count of address lines
-    val negativeWires = Array.fill(addCnt) { new Wire }
-    val positiveWires = c
+    val cRev = c.reverse
+    val positiveWires = cRev
+    val carryCnt = cRev.size // Count of carry lines
+    val negativeWires = Array.fill(carryCnt) { new Wire }
 
-    val zippedAdd = c.zipWithIndex // zipped address lines
+    
+    val zippedCarry = cRev.zipWithIndex // zipped carry lines
 
     // wire between address line and inverter 
-    zippedAdd.map((pair) => (inverter(pair._1, negativeWires(pair._2))))
+    zippedCarry.map((pair) => (inverter(pair._1, negativeWires(pair._2))))
 
-    for ((positiveInput, idx) <- c.view.zipWithIndex) {
+    for ((positiveInput, idx) <- cRev.view.zipWithIndex) {
       inverter(positiveInput, negativeWires(idx))
     }
 
-    val address = 0
-    for ((output, address) <- out.view.zipWithIndex) {
+    for ((output, carryLineNo) <- out.reverse.view.zipWithIndex) {
       // Connect inverters to the first and gate
-      zippedAdd.foreach((pair) => {
-        andGate(getAndWires(in, address, positiveWires, negativeWires.view.toList, Nil), output)
+      zippedCarry.foreach((pair) => {
+        andGate(getAndWires(in, carryLineNo, positiveWires, negativeWires.view.toList, Nil), output)
       })
     }
   }
@@ -153,10 +155,6 @@ object Circuit extends CircuitSimulator {
     in2.setSignal(true)
     run
   }
-
-  //
-  // to complete with orGateExample and demuxExample...
-  //
 
   def orGateExample {
     val in1, in2, out = new Wire
