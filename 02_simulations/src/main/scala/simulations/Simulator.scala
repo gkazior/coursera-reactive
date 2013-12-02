@@ -10,7 +10,7 @@ class Simulator {
   protected[simulations] var agenda: Agenda = List()
   protected var currentTime = 0
 
-  protected def afterDelay(delay: Int)(action: => Unit) {
+  protected[simulations] def afterDelay(delay: Int)(action: => Unit) {
     val item = WorkItem(currentTime + delay, () => action)
     def insert(ag: Agenda): Agenda =
       if (ag.isEmpty || item.time < ag.head.time) item :: ag

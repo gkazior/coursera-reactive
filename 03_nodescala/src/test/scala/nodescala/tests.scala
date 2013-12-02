@@ -1,14 +1,12 @@
 package nodescala
 
-
-
 import scala.language.postfixOps
-import scala.util.{Try, Success, Failure}
+import scala.util.{ Try, Success, Failure }
 import scala.collection._
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.async.Async.{async, await}
+import scala.async.Async.{ async, await }
 import org.scalatest._
 import NodeScala._
 import org.junit.runner.RunWith
@@ -41,6 +39,7 @@ class NodeScalaSuite extends FunSuite {
 
     async {
       while (ct.nonCancelled) {
+        println("waiting")
         // do work
       }
 
@@ -118,7 +117,6 @@ class NodeScalaSuite extends FunSuite {
       val f = dummy.nextRequest()
       dummy.emit(req)
       val (reqReturned, xchg) = Await.result(f, 1 second)
-
       assert(reqReturned == req)
     }
 
@@ -131,7 +129,9 @@ class NodeScalaSuite extends FunSuite {
   test("Server should serve requests") {
     val dummy = new DummyServer(8191)
     val dummySubscription = dummy.start("/testDir") {
-      request => for (kv <- request.iterator) yield (kv + "\n").toString
+      request =>
+        for (kv <- request.iterator)
+          yield (kv + "\n").toString
     }
 
     // wait until server is really installed
@@ -147,10 +147,45 @@ class NodeScalaSuite extends FunSuite {
     test(immutable.Map("StrangeRequest" -> List("Does it work?")))
     test(immutable.Map("StrangeRequest" -> List("It works!")))
     test(immutable.Map("WorksForThree" -> List("Always works. Trust me.")))
-
+    Thread.sleep(500)
     dummySubscription.unsubscribe()
   }
 
+  test("Server should serve long response") {
+    val dummy = new DummyServer(8191)
+    val dummySubscription = dummy.start("/testDir") {
+      request =>
+        {
+          if (request.get("Wait").nonEmpty) {
+            Thread.sleep(1000000)
+          }
+          for (kv <- request.iterator)
+            yield (kv + "\n").toString
+        }
+    }
+
+    // wait until server is really installed
+    Thread.sleep(500)
+
+    def test(req: Request, expectTimout: Boolean = false) {
+      val webpage = dummy.emit("/testDir", req)
+      val tryContent = Try(Await.result(webpage.loaded.future, 200 milliseconds))
+      tryContent match {
+        case Failure(t) => assert(expectTimout, s"Failure only in the case of timout[$expectTimout] $t")
+        case Success(content) => {
+          val expected = (for (kv <- req.iterator) yield (kv + "\n").toString).mkString
+          assert(content == expected, s"'$content' vs. '$expected'")
+        }
+      }
+    }
+
+    test(immutable.Map("StrangeRequest" -> List("Does it work?")))
+    //test(immutable.Map("Wait" -> List("It may block here!")), true)
+    test(immutable.Map("Wrait" -> List("It may block here!")), false)
+    test(immutable.Map("WorksForThree" -> List("Always works. Trust me.")))
+    Thread.sleep(700)
+    dummySubscription.unsubscribe()
+  }
 }
 
 
