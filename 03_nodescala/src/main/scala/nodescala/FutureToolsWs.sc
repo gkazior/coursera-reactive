@@ -31,7 +31,7 @@ object FutureToolsWs {
     // Wait for other threads
     Await.result(p.future, 5 seconds)
     println("Exit!")
-  }
+  }                                               //> testDelay: ()Unit
 
   def testCancellationToken() {
     val cts = CancellationTokenSource()
@@ -61,7 +61,7 @@ object FutureToolsWs {
       println(f"Problem here. Result of future is ${p.isCompleted}")
     }
 
-  }
+  }                                               //> testCancellationToken: ()Unit
 
   def testAny() {
     val p = Promise[String]
@@ -75,7 +75,7 @@ object FutureToolsWs {
     }
     val result = Await.result(p.future, 1 seconds)
     println(f"any finished! $result")
-  }
+  }                                               //> testAny: ()Unit
 
   def all[T](fs: List[Future[T]]): Future[List[T]] = {
     val successful = Promise[List[T]]()
@@ -83,7 +83,8 @@ object FutureToolsWs {
     fs.foldRight(successful.future) { //
       (f, acc) => for { x <- f; xs <- acc } yield x :: xs
     }
-  }
+  }                                               //> all: [T](fs: List[scala.concurrent.Future[T]])scala.concurrent.Future[List[
+                                                  //| T]]
   def testAll() {
     val p = Promise[String]
 
@@ -96,7 +97,7 @@ object FutureToolsWs {
     }
     val result = Await.result(p.future, 1 seconds)
     println(f"any finished! $result")
-  }
+  }                                               //> testAll: ()Unit
 
   def testCancel() {
     val p = Promise[String]
@@ -111,7 +112,7 @@ object FutureToolsWs {
 
     val result = Try(Await.result(p.future, 1 seconds))
     println(f"any finished! $result")
-  } //
+  } //                                            //> testCancel: ()Unit
 
   def testTools() {
     val p = Promise[String]
@@ -121,14 +122,14 @@ object FutureToolsWs {
 
     //val futureToWait = p.future
     val futureToWait = l1(1).continue({
-      case Success(value) => val myValue = "$value_gk_2"; println(s"The value: $myValue"); myValue
+      case Success(value) => {val myValue = "$value_gk_2"; println(s"The value: $myValue"); myValue}
     }).continue({
-      case Success(value) => Thread.sleep(1000); p success s"SEC[$value]"
+      case Success(value) => {Thread.sleep(1000); p success s"SEC[$value]"}
     })
 
     val result = Try(Await.result(futureToWait, 100 milliseconds))
     println(f"any finished! $result")
-  } //
+  }                                               //> testTools: ()Unit
 
   //testCancel
 
@@ -137,5 +138,5 @@ object FutureToolsWs {
 
   //testDelay
   //testCancellationToken
-  //testTools
+ // testTools
 }
