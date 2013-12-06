@@ -9,16 +9,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{ Try, Success, Failure }
 import scala.swing.Reactions.Reaction
 import scala.swing.event.Event
-import rx.lang.scala.Observable
+import rx.lang.scala._
+import rx.lang.scala.subscriptions.Subscription
+import rx.lang.scala.subscriptions.BooleanSubscription
 
-/** Basic facilities for dealing with Swing-like components.
-*
-* Instead of committing to a particular widget implementation
-* functionality has been factored out here to deal only with
-* abstract types like `ValueChanged` or `TextField`.
-* Extractors for abstract events like `ValueChanged` have also
-* been factored out into corresponding abstract `val`s.
-*/
+/**
+ * Basic facilities for dealing with Swing-like components.
+ *
+ * Instead of committing to a particular widget implementation
+ * functionality has been factored out here to deal only with
+ * abstract types like `ValueChanged` or `TextField`.
+ * Extractors for abstract events like `ValueChanged` have also
+ * been factored out into corresponding abstract `val`s.
+ */
 trait SwingApi {
 
   type ValueChanged <: Event
@@ -45,24 +48,42 @@ trait SwingApi {
   }
 
   implicit class TextFieldOps(field: TextField) {
-
-    /** Returns a stream of text field values entered in the given text field.
-      *
-      * @param field the text field
-      * @return an observable with a stream of text field updates
-      */
-    def textValues: Observable[String] = ???
-
+    private def helper(observer: Observer[String]): Subscription = {
+      val reaction: Reaction = {
+        case textEntered: Event => observer.onNext(field.text)
+      }
+      field.subscribe(reaction)
+      Subscription {
+        field.unsubscribe(reaction)
+      }
+    }
+    /**
+     * Returns a stream of text field values entered in the given text field.
+     *
+     * @param field the text field
+     * @return an observable with a stream of text field updates
+     */
+    def textValues: Observable[String] = Observable[String](helper(_))
   }
 
   implicit class ButtonOps(button: Button) {
+    private def helper(observer: Observer[Button]): Subscription = {
+      val reaction: Reaction = {
+        case textEntered: Event => observer.onNext(button)
+      }
 
-    /** Returns a stream of button clicks.
+      button.subscribe(reaction)
+      Subscription {
+        button.unsubscribe(reaction)
+      }
+    }
+    /**
+     * Returns a stream of button clicks.
      *
      * @param field the button
      * @return an observable with a stream of buttons that have been clicked
      */
-    def clicks: Observable[Button] = ???
+    def clicks: Observable[Button] = Observable[Button](helper(_))
 
   }
 

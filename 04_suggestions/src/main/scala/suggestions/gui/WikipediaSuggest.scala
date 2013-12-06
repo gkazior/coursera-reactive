@@ -28,14 +28,13 @@ object WikipediaSuggest extends SimpleSwingApplication with ConcreteSwingApi wit
   }
 
   def top = new MainFrame {
-
-    /* gui setup */
-
     title = "Query Wikipedia"
     minimumSize = new Dimension(900, 600)
 
     val button = new Button("Get") {
-      icon = new javax.swing.ImageIcon(javax.imageio.ImageIO.read(this.getClass.getResourceAsStream("/suggestions/wiki-icon.png")))
+      icon = new javax.swing.ImageIcon(
+          javax.imageio.ImageIO.read(
+              this.getClass.getResourceAsStream("/suggestions/wiki-icon.png")))
     }
     val searchTermField = new TextField
     val suggestionList = new ListView(ListBuffer[String]())
@@ -80,53 +79,65 @@ object WikipediaSuggest extends SimpleSwingApplication with ConcreteSwingApi wit
      *  `myEditorPane.text = "act"` : sets the content of `myEditorPane` to "act"
      */
 
-    // TO IMPLEMENT
-    val searchTerms: Observable[String] = ???
+    val searchTerms: Observable[String] = searchTermField.textValues
 
-    // TO IMPLEMENT
-    val suggestions: Observable[Try[List[String]]] = ???
+    val suggestions: Observable[Try[List[String]]] = searchTerms concatRecovered (
+        (searchTerm: String) => ObservableEx(wikipediaSuggestion(searchTerm)))
 
-
-    // TO IMPLEMENT
-    val suggestionSubscription: Subscription =  suggestions.observeOn(eventScheduler) subscribe {
-      x => ???
+    val suggestionSubscription: Subscription = suggestions.observeOn(eventScheduler) subscribe {
+      x =>
+        x match {
+          case Success(suggestions) => {
+            //println(s"Got: $suggestions")
+            suggestionList.listData = suggestions
+          }
+          case Failure(t) => {
+            //println(s"Bum bum: $t")
+            status.text = t.toString()
+          }
+        }
     }
 
-    // TO IMPLEMENT
-    val selections: Observable[String] = ???
+    //val selections: Observable[String] = ???
+    val selections: Observable[String] = button.clicks.flatMap(click => ObservableShortSeq(suggestionList.selection.items))
+        
+    val pages: Observable[Try[String]] = selections.sanitized concatRecovered ((term: String) => ObservableEx(wikipediaPage(term)))
 
-    // TO IMPLEMENT
-    val pages: Observable[Try[String]] = ???
-
-    // TO IMPLEMENT
     val pageSubscription: Subscription = pages.observeOn(eventScheduler) subscribe {
-      x => ???
+      x =>
+        x match {
+          case Success(page) => {
+            //println(s"Got page: $page")
+            editorpane.text = page
+          }
+          case Failure(t) => {
+            //println(s"Bum bum[2]: $t")
+            status.text = t.toString()
+          }
+        }
     }
-
-  }
-
-}
-
+  
+  } // top MainFrame
+} // object WikipediaSuggest
 
 trait ConcreteWikipediaApi extends WikipediaApi {
   def wikipediaSuggestion(term: String) = Search.wikipediaSuggestion(term)
   def wikipediaPage(term: String) = Search.wikipediaPage(term)
 }
 
-
 trait ConcreteSwingApi extends SwingApi {
   type ValueChanged = scala.swing.event.ValueChanged
   object ValueChanged {
     def unapply(x: Event) = x match {
       case vc: ValueChanged => Some(vc.source.asInstanceOf[TextField])
-      case _ => None
+      case _                => None
     }
   }
   type ButtonClicked = scala.swing.event.ButtonClicked
   object ButtonClicked {
     def unapply(x: Event) = x match {
       case bc: ButtonClicked => Some(bc.source.asInstanceOf[Button])
-      case _ => None
+      case _                 => None
     }
   }
   type TextField = scala.swing.TextField

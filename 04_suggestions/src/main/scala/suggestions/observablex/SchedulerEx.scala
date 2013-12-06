@@ -4,8 +4,12 @@ package observablex
 import java.util.concurrent.Executor
 import rx.lang.scala.{ ImplicitFunctionConversions, Subscription }
 import rx.lang.scala.Scheduler
+import rx.lang.scala._
+
+
 
 object SchedulerEx {
+  
 
   val SwingEventThreadScheduler: Scheduler = new Scheduler {
     import rx.util.functions.Func2
@@ -32,6 +36,5 @@ object SchedulerEx {
         }
       }
     }
-  }
-
+  }    
 }
