@@ -10,8 +10,10 @@ import org.scalatest.matchers.ShouldMatchers
 import scala.util.Random
 import scala.concurrent.duration._
 import org.scalatest.FunSuite
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
-
+@RunWith(classOf[JUnitRunner])
 class BinaryTreeSuite(_system: ActorSystem) extends TestKit(_system) with FunSuite with ShouldMatchers with BeforeAndAfterAll with ImplicitSender 
 {
 
@@ -26,7 +28,7 @@ class BinaryTreeSuite(_system: ActorSystem) extends TestKit(_system) with FunSui
       val repliesUnsorted = for (i <- 1 to ops.size) yield try {
         requester.expectMsgType[OperationReply]
       } catch {
-        case ex: Throwable if ops.size > 10 => fail(s"failure to receive confirmation $i/${ops.size}", ex)
+        case ex: Throwable if ops.size > 10 => fail(s"failure to receive confirmation $i/${ops.size}\n", ex)
         case ex: Throwable                  => fail(s"failure to receive confirmation $i/${ops.size}\nRequests:" + ops.mkString("\n    ", "\n     ", ""), ex)
       }
       val replies = repliesUnsorted.sortBy(_.id)
@@ -122,7 +124,7 @@ class BinaryTreeSuite(_system: ActorSystem) extends TestKit(_system) with FunSui
 
     ops foreach { op =>
       topNode ! op
-      if (rnd.nextDouble() < 0.1) topNode ! GC
+      if (rnd.nextDouble() < 0.2) topNode ! GC
     }
     receiveN(requester, ops, expectedReplies)
   }
