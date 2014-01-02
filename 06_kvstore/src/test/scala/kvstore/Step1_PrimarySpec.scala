@@ -13,13 +13,17 @@ import kvstore.Replica.OperationFailed
 import kvstore.Replicator.{ Snapshot }
 import scala.util.Random
 import scala.util.control.NonFatal
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class Step1_PrimarySpec extends TestKit(ActorSystem("Step1PrimarySpec"))
   with FunSuite
   with BeforeAndAfterAll
   with ShouldMatchers
   with ImplicitSender
-  with Tools {
+  with Tools
+  with FlakySpec {
 
   override def afterAll(): Unit = {
     system.shutdown()
@@ -29,14 +33,14 @@ class Step1_PrimarySpec extends TestKit(ActorSystem("Step1PrimarySpec"))
 
   test("case1: Primary (in isolation) should properly register itself to the provided Arbiter") {
     val arbiter = TestProbe()
-    system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case1-primary")
+    system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case1-primary")
 
     arbiter.expectMsg(Join)
   }
 
-  test("case2: Primary (in isolation) should react properly to Insert, Remove, Get") {
+  def testInsertRemoveGet(flaky: Boolean, name: String ) {
     val arbiter = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case2-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flaky)), "case2_" +name)
     val client = session(primary)
 
     arbiter.expectMsg(Join)
@@ -52,4 +56,11 @@ class Step1_PrimarySpec extends TestKit(ActorSystem("Step1PrimarySpec"))
     client.getAndVerify("k1")
   }
 
+  test("case2: Primary (in isolation) should react properly to Insert, Remove, Get") {
+    testInsertRemoveGet(false, "case2")
+  }
+
+  test("case2+flaky", flakyTag) {
+    testInsertRemoveGet(flakySpec, "case2+flaky")
+  }
 }

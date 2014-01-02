@@ -11,17 +11,24 @@ import akka.testkit.TestProbe
 import Arbiter._
 import Persistence._
 import Replicator._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.Ignore
 
+@RunWith(classOf[JUnitRunner])
 class Step5_PrimaryPersistenceSpec extends TestKit(ActorSystem("Step5PrimaryPersistenceSpec"))
   with FunSuite
   with BeforeAndAfterAll
   with ShouldMatchers
   with ImplicitSender
-  with Tools {
+  with Tools
+  with FlakySpec {
 
+  
   override def afterAll(): Unit = {
     system.shutdown()
   }
+
 
   test("case1: Primary does not acknowledge updates which have not been persisted") {
     val arbiter = TestProbe()
@@ -79,10 +86,10 @@ class Step5_PrimaryPersistenceSpec extends TestKit(ActorSystem("Step5PrimaryPers
     client.waitFailed(setId)
   }
 
-  test("case4: Primary generates failure after 1 second if global acknowledgement fails") {
+  test("case4: Primary generates failure after 1 second if global acknowledgment fails", flakyTag) {
     val arbiter = TestProbe()
     val persistence = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case4-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case4-primary")
     val secondary = TestProbe()
     val client = session(primary)
 
@@ -96,10 +103,10 @@ class Step5_PrimaryPersistenceSpec extends TestKit(ActorSystem("Step5PrimaryPers
     client.waitFailed(setId)
   }
 
-  test("case5: Primary acknowledges only after persistence and global acknowledgement") {
+  test("case5: Primary acknowledges only after persistence and global acknowledgement", flakyTag) {
     val arbiter = TestProbe()
     val persistence = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case5-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case5-primary")
     val secondaryA, secondaryB = TestProbe()
     val client = session(primary)
 

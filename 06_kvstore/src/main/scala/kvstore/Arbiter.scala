@@ -4,10 +4,10 @@ import akka.actor.{ActorRef, Actor}
 import scala.collection.immutable
 
 object Arbiter {
-  case object Join
+  object Join
 
-  case object JoinedPrimary
-  case object JoinedSecondary
+  object JoinedPrimary
+  object JoinedSecondary
 
   /**
    * This message contains all replicas currently known to the arbiter, including the primary.

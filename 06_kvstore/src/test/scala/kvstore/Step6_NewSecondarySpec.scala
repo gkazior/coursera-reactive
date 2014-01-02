@@ -9,21 +9,26 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import Arbiter._
 import Replicator._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.Ignore
 
+@RunWith(classOf[JUnitRunner])
 class Step6_NewSecondarySpec extends TestKit(ActorSystem("Step6NewSecondarySpec"))
   with FunSuite
   with BeforeAndAfterAll
   with ShouldMatchers
   with ImplicitSender
-  with Tools {
+  with Tools 
+  with FlakySpec {
 
   override def afterAll(): Unit = {
     system.shutdown()
   }
-
+ 
   test("case1: Primary must start replication to new replicas") {
     val arbiter = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case1-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case1-primary")
     val user = session(primary)
     val secondary = TestProbe()
 
@@ -49,7 +54,7 @@ class Step6_NewSecondarySpec extends TestKit(ActorSystem("Step6NewSecondarySpec"
 
   test("case2: Primary must stop replication to removed replicas and stop Replicator") {
     val arbiter = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case2-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case2-primary")
     val user = session(primary)
     val secondary = TestProbe()
 
@@ -67,10 +72,10 @@ class Step6_NewSecondarySpec extends TestKit(ActorSystem("Step6NewSecondarySpec"
     arbiter.send(primary, Replicas(Set(primary)))
     expectTerminated(replicator)
   }
-
+    
   test("case3: Primary must stop replication to removed replicas and waive their outstanding acknowledgements") {
     val arbiter = TestProbe()
-    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = false)), "case3-primary")
+    val primary = system.actorOf(Replica.props(arbiter.ref, Persistence.props(flaky = flakySpec)), "case3-primary")
     val user = session(primary)
     val secondary = TestProbe()
 
@@ -88,5 +93,5 @@ class Step6_NewSecondarySpec extends TestKit(ActorSystem("Step6NewSecondarySpec"
     arbiter.send(primary, Replicas(Set(primary)))
     user.waitAck(ack2)
   }
-
+  
 }

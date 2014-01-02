@@ -10,11 +10,17 @@ import akka.actor.Props
 import akka.testkit.TestKit
 import akka.testkit.ImplicitSender
 import scala.concurrent.duration._
+import org.scalatest.Tag
 
 object Tools {
   class TestRefWrappingActor(val probe: TestProbe) extends Actor {
     def receive = { case msg => probe.ref forward msg }
   }
+}
+
+trait FlakySpec {
+   val flakySpec = true
+   val flakyTag = Tag("flaky")
 }
 
 /**
